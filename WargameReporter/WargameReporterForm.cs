@@ -166,7 +166,9 @@ namespace WargameReporter
                     TCPHeader tcpHeader = new TCPHeader(ipHeader.Data, ipHeader.MessageLength);
                     if (tcpHeader.DestinationPort == "10280" || tcpHeader.DestinationPort == "10810")
                     {
-                        string decode = BitConverter.ToString(tcpHeader.Data).Replace("-","");
+                        byte[] data = new byte[tcpHeader.MessageLength];
+                        Array.Copy(tcpHeader.Data, 0, data, 0, tcpHeader.MessageLength);
+                        string decode = BitConverter.ToString(data).Replace("-","");
                         if (decode.Substring(0, 30) == "474554202F7374617473322F75305F")
                         {
                             byte[] postData = Encoding.UTF8.GetBytes("data=" + decode);
