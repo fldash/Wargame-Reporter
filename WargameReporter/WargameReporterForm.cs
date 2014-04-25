@@ -171,7 +171,7 @@ namespace WargameReporter
                         {
                             byte[] postData = Encoding.UTF8.GetBytes("data=" + decode);
                             PostWebRequest("http://europeinruins2-com.securec64.ezhostingserver.com/wargame/svc/getUser.cfm", postData);
-                        } else if (decode.Substring(2,8) == "C67B2267616D6522")
+                        } else if (decode.Substring(4,16) == "C67B2267616D6522")
                         {
                             TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
                             string secondsSinceEpoch = Convert.ToString((int)t.TotalSeconds);
