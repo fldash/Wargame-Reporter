@@ -49,6 +49,7 @@ namespace WargameReporter
                     if (pname.Length == 0 && txtPath.Text != String.Empty)
                     {
                         Process.Start(txtPath.Text);
+                        System.Threading.Thread.Sleep(1000);
                     }
                     pname = Process.GetProcessesByName("Wargame3");
                     if (pname.Length == 0)

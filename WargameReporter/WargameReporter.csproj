@@ -68,6 +68,7 @@
   <ItemGroup>
     <None Include="DNSHeader.cs" />
     <Compile Include="IPHeader.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="WargameReporterForm.cs">
       <SubType>Form</SubType>
     </Compile>
