@@ -172,13 +172,13 @@ namespace WargameReporter
                         if (decode.Substring(0, 30) == "474554202F7374617473322F75305F")
                         {
                             byte[] postData = Encoding.UTF8.GetBytes("data=" + decode);
-                            PostWebRequest("http://europeinruins2-com.securec64.ezhostingserver.com/wargame/svc/getUser.cfm", postData);
+                            PostWebRequest("http://europeinruins2.com/wargame/svc/getUser.cfm", postData);
                         } else if (decode.Substring(4,16) == "C67B2267616D6522")
                         {
                             TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
                             string secondsSinceEpoch = Convert.ToString((int)t.TotalSeconds);
                             byte[] postData = Encoding.UTF8.GetBytes("timestamp=" + secondsSinceEpoch + "&data=" + decode);
-                            PostWebRequest("http://europeinruins2-com.securec64.ezhostingserver.com/wargame/svc/getGame.cfm", postData);
+                            PostWebRequest("http://europeinruins2.com/wargame/svc/getGame.cfm", postData);
                         }
                     }
                 }
@@ -224,8 +224,38 @@ namespace WargameReporter
             response.Close();
         }
 
+        private void GetVersionCallback(IAsyncResult asynchronousResult)
+        {
+            try
+            {
+                HttpWebRequest webRequest = (HttpWebRequest)asynchronousResult.AsyncState;
+                HttpWebResponse webResponse = (HttpWebResponse)webRequest.EndGetResponse(asynchronousResult);
+                Stream streamResponse = webResponse.GetResponseStream();
+                StreamReader streamRead = new StreamReader(streamResponse);
+                string versionString = streamRead.ReadToEnd();
+                Version latestVersion = new Version(versionString);
+
+                Version myVersion = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
+                
+                if (latestVersion > myVersion)
+                {
+                    if (MessageBox.Show(String.Format("You've got version {0} of Wargame Report. Would you like to update to the latest version {1}?", myVersion, latestVersion), "Update Wargame Reporter?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        Process.Start("http://www.europeinruins2.com/wargame/download/WargameReporter.zip");
+                    }
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Error checking for newer version.", "Wargame Reporter", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void SnifferForm_Load(object sender, EventArgs e)
         {
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create("http://www.europeinruins2.com/wargame/download/version.txt");
+            webRequest.BeginGetResponse(new AsyncCallback(GetVersionCallback), webRequest);
+
             txtPath.Text = Properties.Settings.Default.txtPath;
             
             string strIP = null;
