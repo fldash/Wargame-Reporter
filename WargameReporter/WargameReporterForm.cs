@@ -10,6 +10,7 @@ using System.Net;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
+using NetFwTypeLib;
 
 namespace WargameReporter
 {
@@ -25,6 +26,7 @@ namespace WargameReporter
         private Socket mainSocket;                          //The socket which captures all incoming packets
         private byte[] byteData = new byte[4096];
         private bool bContinueCapturing = false;            //A flag to check if packets are to be captured or not
+        private clsFirewall objFirewall = new clsFirewall();
 
         private Process[] pname;
 
@@ -148,8 +150,6 @@ namespace WargameReporter
             pname = Process.GetProcessesByName("Wargame3");
             if(pname.Length == 0)
             {
-                bContinueCapturing = false;
-                mainSocket.Close();
                 Application.Exit();
                 return;
             }
@@ -164,21 +164,25 @@ namespace WargameReporter
                 if(ipHeader.ProtocolType == Protocol.TCP)
                 {
                     TCPHeader tcpHeader = new TCPHeader(ipHeader.Data, ipHeader.MessageLength);
-                    if (tcpHeader.DestinationPort == "10280" || tcpHeader.DestinationPort == "10810")
+                    byte[] data = new byte[tcpHeader.MessageLength];
+                    Array.Copy(tcpHeader.Data, 0, data, 0, tcpHeader.MessageLength);
+                    string decode = BitConverter.ToString(data).Replace("-", "");
+                    if (decode.Length > 0)
                     {
-                        byte[] data = new byte[tcpHeader.MessageLength];
-                        Array.Copy(tcpHeader.Data, 0, data, 0, tcpHeader.MessageLength);
-                        string decode = BitConverter.ToString(data).Replace("-","");
-                        if (decode.Substring(0, 30) == "474554202F7374617473322F75305F")
+                        if (tcpHeader.DestinationPort == "10280" || tcpHeader.DestinationPort == "10810")
                         {
-                            byte[] postData = Encoding.UTF8.GetBytes("data=" + decode);
-                            PostWebRequest("http://europeinruins2.com/wargame/svc/getUser.cfm", postData);
-                        } else if (decode.Substring(4,16) == "C67B2267616D6522")
-                        {
-                            TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
-                            string secondsSinceEpoch = Convert.ToString((int)t.TotalSeconds);
-                            byte[] postData = Encoding.UTF8.GetBytes("timestamp=" + secondsSinceEpoch + "&data=" + decode);
-                            PostWebRequest("http://europeinruins2.com/wargame/svc/getGame.cfm", postData);
+                            if (decode.Substring(0, 30) == "474554202F7374617473322F75305F")
+                            {
+                                byte[] postData = Encoding.UTF8.GetBytes("data=" + decode);
+                                PostWebRequest("http://europeinruins2.com/wargame/svc/getUser.cfm", postData);
+                            }
+                            else if (decode.Substring(4, 16) == "C67B2267616D6522")
+                            {
+                                TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
+                                string secondsSinceEpoch = Convert.ToString((int)t.TotalSeconds);
+                                byte[] postData = Encoding.UTF8.GetBytes("timestamp=" + secondsSinceEpoch + "&data=" + decode);
+                                PostWebRequest("http://europeinruins2.com/wargame/svc/getGame.cfm", postData);
+                            }
                         }
                     }
                 }
@@ -250,13 +254,16 @@ namespace WargameReporter
                 MessageBox.Show("Error checking for newer version.", "Wargame Reporter", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
+        
         private void SnifferForm_Load(object sender, EventArgs e)
         {
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create("http://www.europeinruins2.com/wargame/download/version.txt");
             webRequest.BeginGetResponse(new AsyncCallback(GetVersionCallback), webRequest);
 
-            txtPath.Text = Properties.Settings.Default.txtPath;
+            objFirewall.OpenFirewall();
+
+            if (Properties.Settings.Default.txtPath != String.Empty)
+                txtPath.Text = Properties.Settings.Default.txtPath;
             
             string strIP = null;
 
@@ -299,6 +306,7 @@ namespace WargameReporter
             {
                 mainSocket.Close();
             }
+            objFirewall.CloseFirewall();
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
