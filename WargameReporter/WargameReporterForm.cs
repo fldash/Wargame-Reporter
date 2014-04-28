@@ -50,8 +50,12 @@ namespace WargameReporter
                     pname = Process.GetProcessesByName("Wargame3");
                     if (pname.Length == 0 && txtPath.Text != String.Empty)
                     {
-                        Process.Start(txtPath.Text);
-                        System.Threading.Thread.Sleep(1000);
+                        try
+                        {
+                            Process.Start(txtPath.Text);
+                            System.Threading.Thread.Sleep(1000);
+                        }
+                        catch { }
                     }
                     pname = Process.GetProcessesByName("Wargame3");
                     if (pname.Length == 0)
@@ -328,6 +332,12 @@ namespace WargameReporter
             Properties.Settings.Default.txtPath = txtPath.Text;
             Properties.Settings.Default.Save();
 
+        }
+
+        private void txtPath_Change(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.txtPath = txtPath.Text;
+            Properties.Settings.Default.Save();
         }
 
         private void cmbInterfaces_SelectedIndexChanged(object sender, EventArgs e)

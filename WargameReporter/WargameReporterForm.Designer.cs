@@ -68,6 +68,7 @@ namespace WargameReporter
             this.txtPath.Size = new System.Drawing.Size(328, 20);
             this.txtPath.TabIndex = 3;
             this.txtPath.Text = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Wargame Red Dragon\\WarGame3.exe";
+            this.txtPath.TextChanged += new System.EventHandler(this.txtPath_Change);
             // 
             // lblPath
             // 
